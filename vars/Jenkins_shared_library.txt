@@ -1,0 +1,80 @@
+JENKINS SHARED LIBRARY 
+Jenkins Shared Library is a concept of having common pipeline code in the version control
+system that can be used by any number of pipelines just by referencing it. 
+
+Create Shared Library
+1. Create GitHub repo to store shared library code.
+
+2. Create file structure like this :
+(root)
++- src                     # Groovy source files
+|   +- org
+|       +- foo
+|           +- Bar.groovy  # for org.foo.Bar class
++- vars
+|   +- foo.groovy          # for global 'foo' variable
+|   +- foo.txt             # help for 'foo' variable
++- resources               # resource files (external libraries only)
+|   +- org
+|       +- foo
+|           +- bar.json    # static helper data for 					org.foo.Bar
+
+eg.
+In my case i have create this 
++vars
+|------ +- hello.groovy # extension must be .groovy
+	+- dockerCred.groovy
+
+GitHub repo: https://github.com/Gaurav1517/sharedLibrary.git
+sharedLibrary/vars/hello.groovy
+def call(String message) {
+    echo "Hello from Shared Library! Message: ${message}"
+}
+
+3. Configure in Jenkins Dashboard 
+Navigate to Manage Jenkins » System » Global Trusted Pipeline Libraries to configure as many libraries as necessary.
+Library
+Name: Shared
+Default version: main
+Currently maps to revision: e407b8379e0c69b95ef2feb14695637042efe939
+
+Load implicitly
+Allow default version to be overridden
+Include @Library changes in job recent changes
+Cache fetched versions on controller for quick retrieval
+Retrieval method: Modern SCM
+
+Loads a library from an SCM plugin using newer interfaces optimized for this purpose. The recommended option when available.
+Source Code Management
+
+Git
+Project Repository: https://github.com/Gaurav1517/sharedLibrary.git
+Credentials: - none -
++Add
+Behaviors
+Discover branches
+
+Add
+
+Fresh clone per build
+Library Path (optional): ./
+Apply > Save
+
+Jenkinsfile
+@Library('Shared') _
+pipeline{
+    agent any
+    
+    stages{
+        stage('Shared Library'){
+            steps{
+                script{
+                    hello('Printing shared library..!')
+                }
+            }
+        }
+    }
+}
+Output:
+Hello from Shared Library! Message: Printing shared library..!
+Finished: SUCCESS
