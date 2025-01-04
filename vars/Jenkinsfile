@@ -1,0 +1,57 @@
+@Library('shared_library_name') _
+pipeline {
+  agent { label 'jenkins-agent-label' }
+
+  environment {
+    docker_user = 'docker-hub-username'
+  }
+
+  stages {
+    stage('Git Checkout') {
+      steps {
+        script {
+          echo "Cloning the code"
+          clone('https://github.com/your-repo.git', 'main')
+        }
+      }
+    }
+    stage('Build Docker Image') {
+      steps {
+        echo "Build docker image"
+        docker_build(env.JOB_NAME, env.BUILD_NUMBER.toInteger())
+      }
+    }
+    stage('Tag Docker Image') {
+      steps {
+        script {
+          echo "Tagging docker image"
+          tag_docker_image(env.JOB_NAME, env.BUILD_NUMBER.toInteger(), env.docker_user)
+        }
+      }
+    }
+    stage('Trivy Image Scan') {
+      steps {
+        script {
+          echo "Trivy image scan"
+          trivy_image_scan(env.docker_user)
+        }
+      }
+    }
+    stage('Push to Docker Hub') {
+      steps {
+        script {
+          echo "This is docker login & pushing the image to Docker Hub"
+          docker_push(env.JOB_NAME, env.docker_user)
+        }
+      }
+    }
+    stage('Deploy to Docker-compose') {
+      steps {
+        script {
+          echo "Deploying the image to Docker-compose"
+          docker_compose()
+        }
+      }
+    }
+  }
+}
